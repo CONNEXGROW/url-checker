@@ -16,11 +16,9 @@
       align-items: center;
       justify-content: center;
       height: 100vh;
-      overflow-y: auto;
     }
     h1 {
       color: #444;
-      font-size: 24px;
     }
     form {
       margin-top: 20px;
@@ -30,8 +28,7 @@
     }
     input[type="text"] {
       padding: 10px;
-      width: 80%;
-      max-width: 400px;
+      width: 300px;
       border: 1px solid #ccc;
       border-radius: 5px;
       margin-bottom: 10px;
@@ -43,8 +40,6 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
-      width: 80%;
-      max-width: 400px;
     }
     button:hover {
       background-color: #218838;
@@ -55,14 +50,10 @@
       background-color: #fff;
       border: 1px solid #ddd;
       border-radius: 5px;
-      width: 80%;
-      max-width: 400px;
-      text-align: center;
+      max-width: 500px;
     }
     #spinner {
       display: none;
-      text-align: center;
-      margin-top: 10px;
     }
   </style>
 </head>
@@ -87,7 +78,6 @@
       resultDiv.innerHTML = '';
       spinner.style.display = 'block';
 
-      // URL validation pattern
       const urlPattern = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i;
       if (!urlPattern.test(url)) {
         spinner.style.display = 'none';
@@ -96,14 +86,13 @@
       }
 
       try {
-        // First, submit the URL to VirusTotal for scanning
         const submitResponse = await fetch('https://www.virustotal.com/api/v3/urls', {
           method: 'POST',
           headers: {
             'x-apikey': apiKey,
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
           },
-          body: JSON.stringify({ url: url }),
+          body: `url=${encodeURIComponent(url)}`,
         });
 
         if (!submitResponse.ok) throw new Error(`Error: ${submitResponse.status}`);
@@ -113,7 +102,6 @@
         }
 
         const scanId = submitData.data.id;
-        // Now, fetch the scan results from VirusTotal
         const resultResponse = await fetch(`https://www.virustotal.com/api/v3/analyses/${scanId}`, {
           method: 'GET',
           headers: {
@@ -133,7 +121,6 @@
         const suspicious = stats.suspicious || 0;
         const harmless = stats.harmless || 0;
 
-        // Display the results
         if (malicious > 0) {
           resultDiv.innerHTML = `<p style="color: red;"><strong>Warning!</strong> This website is flagged as malicious.</p>`;
         } else if (suspicious > 0) {
