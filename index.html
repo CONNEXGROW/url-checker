@@ -3,138 +3,101 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>URL Safety Checker</title>
+  <title>URL Checker</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       background-color: #f4f4f4;
       color: #333;
+      text-align: center;
       margin: 0;
       padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
     }
+
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
     h1 {
-      color: #444;
+      color: #007BFF;
     }
-    form {
-      margin-top: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+
     input[type="text"] {
+      width: 100%;
       padding: 10px;
-      width: 300px;
+      margin: 10px 0;
       border: 1px solid #ccc;
-      border-radius: 5px;
-      margin-bottom: 10px;
+      border-radius: 4px;
     }
+
     button {
       padding: 10px 20px;
-      background-color: #28a745;
+      background-color: #007BFF;
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 4px;
       cursor: pointer;
     }
+
     button:hover {
-      background-color: #218838;
+      background-color: #0056b3;
     }
-    #result {
+
+    .result {
       margin-top: 20px;
       padding: 10px;
-      background-color: #fff;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      max-width: 500px;
+      border-radius: 4px;
     }
-    #spinner {
-      display: none;
+
+    .safe {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .phishing {
+      background-color: #f8d7da;
+      color: #721c24;
     }
   </style>
 </head>
 <body>
-  <h1>URL Safety Checker</h1>
-  <form id="urlForm">
-    <input type="text" id="urlInput" placeholder="Enter a URL to check" required>
-    <button type="submit">Check URL</button>
-  </form>
-  <div id="result" aria-live="polite"></div>
-  <div id="spinner">🔄 Checking...</div>
+  <div class="container">
+    <h1>PhishTank URL Checker</h1>
+    <p>Enter a URL to check if it's a phishing website:</p>
+    <input type="text" id="urlInput" placeholder="Enter URL here">
+    <button onclick="checkURL()">Check URL</button>
+    <div id="result" class="result"></div>
+  </div>
 
   <script>
-    const apiKey = '8b16bee25ee6beb73c9559bda43b50e0a915669ad3db74ba00ae85b05c40f711'; // Replace with your VirusTotal API key
-
-    document.getElementById('urlForm').addEventListener('submit', async function (event) {
-      event.preventDefault();
-
-      const url = document.getElementById('urlInput').value.trim();
+    function checkURL() {
+      const urlInput = document.getElementById('urlInput').value;
       const resultDiv = document.getElementById('result');
-      const spinner = document.getElementById('spinner');
-      resultDiv.innerHTML = '';
-      spinner.style.display = 'block';
+      resultDiv.innerHTML = 'Checking...';
 
-      const urlPattern = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i;
-      if (!urlPattern.test(url)) {
-        spinner.style.display = 'none';
-        resultDiv.innerHTML = 'Error: Invalid URL. Please enter a valid URL starting with "http://" or "https://".';
-        return;
-      }
-
-      try {
-        const submitResponse = await fetch('https://www.virustotal.com/api/v3/urls', {
-          method: 'POST',
-          headers: {
-            'x-apikey': apiKey,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `url=${encodeURIComponent(url)}`,
+      fetch(`https://checkurl.phishtank.com/checkurl/?url=${encodeURIComponent(urlInput)}`)
+        .then(response => response.text())
+        .then(data => {
+          // Check if the response contains "phishing" keyword
+          if (data.includes("phishing")) {
+            resultDiv.className = "result phishing";
+            resultDiv.innerHTML = "🚨 This URL is flagged as a phishing website!";
+          } else {
+            resultDiv.className = "result safe";
+            resultDiv.innerHTML = "✅ This URL appears to be safe!";
+          }
+        })
+        .catch(error => {
+          resultDiv.className = "result";
+          resultDiv.innerHTML = "❌ Error checking the URL. Please try again.";
+          console.error("Error:", error);
         });
-
-        if (!submitResponse.ok) throw new Error(`Error: ${submitResponse.status}`);
-        const submitData = await submitResponse.json();
-        if (!submitData.data || !submitData.data.id) {
-          throw new Error('Error: Unable to scan the URL.');
-        }
-
-        const scanId = submitData.data.id;
-        const resultResponse = await fetch(`https://www.virustotal.com/api/v3/analyses/${scanId}`, {
-          method: 'GET',
-          headers: {
-            'x-apikey': apiKey,
-          },
-        });
-
-        if (!resultResponse.ok) throw new Error(`Error: ${resultResponse.status}`);
-        const resultData = await resultResponse.json();
-        if (!resultData.data || !resultData.data.attributes) {
-          throw new Error('Error: Unable to retrieve scan results.');
-        }
-
-        spinner.style.display = 'none';
-        const stats = resultData.data.attributes.stats;
-        const malicious = stats.malicious || 0;
-        const suspicious = stats.suspicious || 0;
-        const harmless = stats.harmless || 0;
-
-        if (malicious > 0) {
-          resultDiv.innerHTML = `<p style="color: red;"><strong>Warning!</strong> This website is flagged as malicious.</p>`;
-        } else if (suspicious > 0) {
-          resultDiv.innerHTML = `<p style="color: orange;"><strong>Caution!</strong> This website exhibits suspicious behavior.</p>`;
-        } else if (harmless > 0) {
-          resultDiv.innerHTML = `<p style="color: green;">This website is safe to visit.</p>`;
-        } else {
-          resultDiv.innerHTML = `<p>The safety status of this website could not be determined.</p>`;
-        }
-      } catch (error) {
-        spinner.style.display = 'none';
-        resultDiv.innerHTML = error.message || 'An error occurred. Please try again.';
-      }
-    });
+    }
   </script>
 </body>
 </html>
