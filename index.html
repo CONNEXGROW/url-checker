@@ -80,7 +80,11 @@
       const resultDiv = document.getElementById('result');
       resultDiv.innerHTML = 'Checking...';
 
-      fetch(`https://checkurl.phishtank.com/checkurl/?url=${encodeURIComponent(urlInput)}`)
+      // Use the CORS proxy
+      const proxy = "https://cors-anywhere.herokuapp.com/";
+      const apiUrl = `https://checkurl.phishtank.com/checkurl/?url=${encodeURIComponent(urlInput)}`;
+
+      fetch(proxy + apiUrl)
         .then(response => response.text())
         .then(data => {
           // Check if the response contains "phishing" keyword
