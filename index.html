@@ -1,107 +1,248 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>URL Checker</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      color: #333;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-    }
-
-    .container {
-      max-width: 600px;
-      margin: 50px auto;
-      padding: 20px;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    h1 {
-      color: #007BFF;
-    }
-
-    input[type="text"] {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-
-    button {
-      padding: 10px 20px;
-      background-color: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    .result {
-      margin-top: 20px;
-      padding: 10px;
-      border-radius: 4px;
-    }
-
-    .safe {
-      background-color: #d4edda;
-      color: #155724;
-    }
-
-    .phishing {
-      background-color: #f8d7da;
-      color: #721c24;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Safety Checker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: white;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+        h1 {
+            color: #4a5568;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #5a67d8;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 16px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        .safe {
+            background-color: #c6f6d5;
+            color: #2f855a;
+        }
+        .unsafe {
+            background-color: #fed7d7;
+            color: #c53030;
+        }
+        #loading {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            height: 100px;
+        }
+        .stick-figure {
+            width: 50px;
+            height: 60px;
+            position: relative;
+            animation: run 0.5s infinite linear;
+        }
+        .stick-figure::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #2d3748;
+            top: 0;
+            left: 15px;
+        }
+        .stick-figure::after {
+            content: '';
+            position: absolute;
+            width: 2px;
+            height: 30px;
+            background-color: #2d3748;
+            top: 20px;
+            left: 24px;
+        }
+        .stick-figure .arm-left,
+        .stick-figure .arm-right,
+        .stick-figure .leg-left,
+        .stick-figure .leg-right {
+            position: absolute;
+            width: 2px;
+            height: 20px;
+            background-color: #2d3748;
+        }
+        .stick-figure .arm-left {
+            top: 22px;
+            left: 24px;
+            transform-origin: top;
+            animation: swing-left 0.5s infinite alternate;
+        }
+        .stick-figure .arm-right {
+            top: 22px;
+            right: 24px;
+            transform-origin: top;
+            animation: swing-right 0.5s infinite alternate;
+        }
+        .stick-figure .leg-left {
+            bottom: 0;
+            left: 24px;
+            transform-origin: top;
+            animation: swing-left 0.5s infinite alternate-reverse;
+        }
+        .stick-figure .leg-right {
+            bottom: 0;
+            right: 24px;
+            transform-origin: top;
+            animation: swing-right 0.5s infinite alternate-reverse;
+        }
+        @keyframes run {
+            0% { transform: translateX(-25px); }
+            100% { transform: translateX(25px); }
+        }
+        @keyframes swing-left {
+            0% { transform: rotate(-30deg); }
+            100% { transform: rotate(30deg); }
+        }
+        @keyframes swing-right {
+            0% { transform: rotate(30deg); }
+            100% { transform: rotate(-30deg); }
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 20px;
+            }
+            input[type="text"], button {
+                font-size: 14px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>PhishTank URL Checker</h1>
-    <p>Enter a URL to check if it's a phishing website:</p>
-    <input type="text" id="urlInput" placeholder="Enter URL here">
-    <button onclick="checkURL()">Check URL</button>
-    <div id="result" class="result"></div>
-  </div>
+    <div class="container">
+        <h1>URL Safety Checker</h1>
+        <input type="text" id="urlInput" placeholder="Enter a URL (e.g., https://example.com)">
+        <button onclick="checkSafety()">Check Safety</button>
+        <div id="loading">
+            <div class="stick-figure">
+                <div class="arm-left"></div>
+                <div class="arm-right"></div>
+                <div class="leg-left"></div>
+                <div class="leg-right"></div>
+            </div>
+        </div>
+        <div class="result" id="result"></div>
+    </div>
 
-  <script>
-    function checkURL() {
-      const urlInput = document.getElementById('urlInput').value;
-      const resultDiv = document.getElementById('result');
-      resultDiv.innerHTML = 'Checking...';
+    <script>
+        function checkSafety() {
+            const urlInput = document.getElementById("urlInput").value;
+            const resultDiv = document.getElementById("result");
+            const loadingDiv = document.getElementById("loading");
 
-      // Use the CORS proxy
-      const proxy = "https://cors-anywhere.herokuapp.com/";
-      const apiUrl = `https://checkurl.phishtank.com/checkurl/?url=${encodeURIComponent(urlInput)}`;
+            if (!urlInput) {
+                alert("Please enter a URL.");
+                return;
+            }
 
-      fetch(proxy + apiUrl)
-        .then(response => response.text())
-        .then(data => {
-          // Check if the response contains "phishing" keyword
-          if (data.includes("phishing")) {
-            resultDiv.className = "result phishing";
-            resultDiv.innerHTML = "🚨 This URL is flagged as a phishing website!";
-          } else {
-            resultDiv.className = "result safe";
-            resultDiv.innerHTML = "✅ This URL appears to be safe!";
-          }
-        })
-        .catch(error => {
-          resultDiv.className = "result";
-          resultDiv.innerHTML = "❌ Error checking the URL. Please try again.";
-          console.error("Error:", error);
+            // Show loading animation
+            loadingDiv.style.display = "flex";
+            resultDiv.style.display = "none";
+
+            // Simulate API call delay
+            setTimeout(() => {
+                try {
+                    const url = new URL(urlInput);
+                    let resultMessage = "";
+                    let isSafe = true;
+
+                    // Check if the URL uses HTTPS
+                    if (url.protocol !== "https:") {
+                        resultMessage += "❌ The URL does not use HTTPS (SSL certificate missing).<br>";
+                        isSafe = false;
+                    } else {
+                        resultMessage += "✅ The URL uses HTTPS (SSL certificate is present).<br>";
+                    }
+
+                    // Check for suspicious patterns
+                    if (url.hostname.includes("-")) {
+                        resultMessage += "❌ The domain contains a hyphen, which can be suspicious.<br>";
+                        isSafe = false;
+                    }
+                    if (url.hostname.length > 60) {
+                        resultMessage += "❌ The domain name is unusually long, which can be suspicious.<br>";
+                        isSafe = false;
+                    }
+
+                    // Display results
+                    if (isSafe) {
+                        resultDiv.innerHTML = "<strong>The URL seems safe to visit!</strong><br>" + resultMessage;
+                        resultDiv.className = "result safe";
+                    } else {
+                        resultDiv.innerHTML = "<strong>The URL may be unsafe!</strong><br>" + resultMessage;
+                        resultDiv.className = "result unsafe";
+                    }
+                } catch (e) {
+                    resultDiv.innerHTML = "<strong>Invalid URL. Please enter a valid URL.</strong>";
+                    resultDiv.className = "result unsafe";
+                }
+
+                // Hide loading animation and show result
+                loadingDiv.style.display = "none";
+                resultDiv.style.display = "block";
+            }, 2000); // 2 second delay to simulate processing
+        }
+
+        document.getElementById("urlInput").addEventListener("input", function () {
+            const resultDiv = document.getElementById("result");
+            resultDiv.style.display = "none";
         });
-    }
-  </script>
+    </script>
 </body>
 </html>
